@@ -1,5 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
+import { WindLayer } from './WindLayer';
+import { RainfallGrid } from './RainfallGrid';
 
 interface MapViewProps {
   currentLeadTime: number;
@@ -8,6 +10,7 @@ interface MapViewProps {
     showUncertaintyCone: boolean;
     showImpactZone: boolean;
     show5kmHeatmap: boolean;
+    showWindStreamlines?: boolean;
   };
   trajectoryData: {
     waypoints: Array<{ lead_time_hr: number; lat: number; lon: number; intensity: number }>;
@@ -186,6 +189,12 @@ export const MapView: React.FC<MapViewProps> = ({
           REGION: BAY OF BENGAL · 12KM EPS MESH
         </span>
       </div>
+
+      {/* Animated Cyclonic Wind Particles */}
+      <WindLayer visible={layers.showWindStreamlines ?? true} intensity={1.2} />
+
+      {/* 5km Precipitation Raster Legend */}
+      <RainfallGrid visible={layers.show5kmHeatmap} />
     </div>
   );
 };

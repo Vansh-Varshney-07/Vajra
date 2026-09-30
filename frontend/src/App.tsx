@@ -3,7 +3,8 @@ import { MapView } from './components/MapView';
 import { AlertPanel } from './components/AlertPanel';
 import { TimeSlider } from './components/TimeSlider';
 import { DownscalingModal } from './components/DownscalingModal';
-import { Layers, Activity, Cpu } from 'lucide-react';
+import { ThresholdControls } from './components/ThresholdControls';
+import { Layers, Activity, Cpu, SlidersHorizontal } from 'lucide-react';
 
 const API_BASE = 'http://localhost:8000';
 
@@ -48,13 +49,15 @@ export const App: React.FC = () => {
   const [isDownscaling, setIsDownscaling] = useState<boolean>(false);
   const [downscaleData, setDownscaleData] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [showThresholds, setShowThresholds] = useState<boolean>(false);
 
   // Layer Visibility State
   const [layers, setLayers] = useState({
     showEnsembleTracks: true,
     showUncertaintyCone: true,
     showImpactZone: true,
-    show5kmHeatmap: true
+    show5kmHeatmap: true,
+    showWindStreamlines: true,
   });
 
   // Fetch initial event & trajectory from FastAPI
@@ -178,8 +181,24 @@ export const App: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Status Badge */}
+        {/* Right Status Badge & Thresholds Button */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <button
+            onClick={() => setShowThresholds(!showThresholds)}
+            className="glass-badge"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              cursor: 'pointer',
+              border: showThresholds ? '1px solid #06B6D4' : undefined,
+              color: showThresholds ? '#06B6D4' : undefined
+            }}
+            title="Configure Risk Engine Thresholds"
+          >
+            <SlidersHorizontal size={13} />
+            THRESHOLDS
+          </button>
           <div className="glass-badge" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10B981' }} />
             LIVE INFERENCE
@@ -190,12 +209,17 @@ export const App: React.FC = () => {
       {/* Main Workspace */}
       <div style={{ display: 'flex', flex: 1, padding: '0 12px 12px 12px', gap: '12px', overflow: 'hidden' }}>
         {/* Left Side: Alert & Threat Overview Panel */}
-        <div style={{ width: '420px', height: '100%' }}>
+        <div style={{ width: '420px', height: '100%', display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <AlertPanel
             event={event}
             onTriggerDownscale={handleTriggerDownscale}
             isDownscaling={isDownscaling}
           />
+          {showThresholds && (
+            <div style={{ zIndex: 50 }}>
+              <ThresholdControls />
+            </div>
+          )}
         </div>
 
         {/* Center: Interactive GIS Map & Timeline Scrubber */}
@@ -260,6 +284,15 @@ export const App: React.FC = () => {
                   onChange={(e) => setLayers({ ...layers, show5kmHeatmap: e.target.checked })}
                 />
                 5 km Downscaled Simulation
+              </label>
+
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', color: '#38BDF8', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={layers.showWindStreamlines}
+                  onChange={(e) => setLayers({ ...layers, showWindStreamlines: e.target.checked })}
+                />
+                Cyclonic Wind Streamlines
               </label>
             </div>
           </div>

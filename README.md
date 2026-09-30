@@ -88,17 +88,29 @@ NEPS-G / NCUM / ERA5 / IMDAA (GRIB2 / NetCDF)
 
 ```
 Vajra/
+├── .github/
+│   └── workflows/
+│       ├── test.yml          # Automated CI pytest + physics loss validation
+│       └── lint.yml          # Ruff + Mypy + frontend build checks
 ├── configs/                  # GNN, Diffusion, Impact threshold configs (YAML)
+├── notebooks/                # Jupyter workflow & training notebooks
+│   ├── 01_data_exploration.ipynb
+│   ├── 02_climatology_validation.ipynb
+│   ├── 03_gnn_training.ipynb
+│   └── 04_diffusion_training.ipynb
 ├── vajra/
-│   ├── ingestion/            # NWP loader (GRIB2/NetCDF → Zarr) + EFI Climatology
-│   ├── tracking/             # Stage 1: Spherical Mesh + GNN + Trajectory Tracker
-│   ├── downscaling/          # Stage 2: ConditionalUNet + Diffusion + Physics Loss
+│   ├── ingestion/            # NWP loader (GRIB2/NetCDF → Zarr) + Climatology & ZarrWriter
+│   ├── tracking/             # Stage 1: Spherical Mesh + GNN + EFI Calculator + Anomaly Tracker
+│   ├── downscaling/          # Stage 2: ConditionalUNet + Diffusion + Physics Loss + Sampler
 │   ├── impact/               # Risk Engine + Geodesic 5km Buffer Generator
-│   └── api/                  # FastAPI microservice (7 endpoints + GeoJSON)
+│   ├── api/                  # FastAPI microservice (9 endpoints) + Celery tasks + GeoJSON
+│   └── utils/                # Metrics (CRPS, SEDI, PARE) + Geo utilities
 ├── frontend/                 # React 18 + TypeScript + Vite + Leaflet dashboard
-├── tests/                    # Pytest suite (Mesh · Physics Loss · Impact · API)
-├── requirements.txt          # Python 3.14 dependencies (148 packages)
-└── ARCHITECTURE.md           # Full system blueprint
+├── tests/                    # Pytest suite (17 tests covering all layers)
+├── Dockerfile                # Production multi-stage backend container
+├── docker-compose.yml        # Docker compose orchestrating FastAPI, Redis, and React
+├── requirements.txt          # Python dependencies
+└── ARCHITECTURE.md           # Master system blueprint
 ```
 
 ---
@@ -107,12 +119,15 @@ Vajra/
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/` | Health check |
-| `GET` | `/events` | List all tracked events |
-| `GET` | `/events/{id}` | Event metadata |
-| `GET` | `/events/{id}/trajectory` | 4D path + 20-member uncertainty cones (GeoJSON) |
-| `GET` | `/events/{id}/impact` | Geodesic 5 km impact buffer (GeoJSON) |
-| `POST` | `/events/{id}/downscale` | Trigger 12km→5km diffusion downscaling |
+| `GET` | `/` | Health check & microservice status |
+| `GET` | `/events` | List all tracked extreme weather anomalies |
+| `GET` | `/events/{id}` | Anomaly event metadata & threat levels |
+| `GET` | `/events/{id}/trajectory` | 4D consensus path + 50-member uncertainty cones (GeoJSON) |
+| `GET` | `/events/{id}/impact` | Geodesic 5 km impact buffer polygon (GeoJSON) |
+| `GET` | `/events/{id}/forecast` | 20-sample probabilistic ensemble summary (mean, P90, P95) |
+| `POST` | `/events/{id}/downscale` | Trigger 12km→5km physics-constrained diffusion downscaling |
+| `POST` | `/events/detect` | Run Spherical GNN tracking across forecast grids |
+| `POST` | `/forecast` | Trigger end-to-end Vajra pipeline on raw NWP run |
 
 ---
 
@@ -122,17 +137,25 @@ Vajra/
 ============================= test session starts ============================
 Python 3.14.4, pytest-9.1.1
 
-tests/test_api.py::test_root_health                PASSED
-tests/test_api.py::test_get_events                 PASSED
-tests/test_api.py::test_get_trajectory             PASSED
-tests/test_api.py::test_get_impact_zone            PASSED
-tests/test_api.py::test_downscale_endpoint         PASSED
-tests/test_impact_zone.py::test_geodesic_5km_impact_buffer  PASSED
-tests/test_mesh.py::test_mesh_generation_and_subdivision    PASSED
-tests/test_mesh.py::test_graph_construction                 PASSED
-tests/test_physics_loss.py::test_physics_loss_computation   PASSED
+tests/test_api.py::test_root_health                               PASSED
+tests/test_api.py::test_get_events                                PASSED
+tests/test_api.py::test_get_trajectory                            PASSED
+tests/test_api.py::test_get_impact_zone                           PASSED
+tests/test_api.py::test_downscale_endpoint                        PASSED
+tests/test_efi_calculator.py::test_efi_computation_values_range    PASSED
+tests/test_efi_calculator.py::test_composite_anomaly_flag         PASSED
+tests/test_geo_utils.py::test_spherical_coordinate_roundtrip     PASSED
+tests/test_geo_utils.py::test_great_circle_distance              PASSED
+tests/test_geo_utils.py::test_geodesic_buffer_area               PASSED
+tests/test_geo_utils.py::test_to_feature_collection              PASSED
+tests/test_impact_zone.py::test_geodesic_5km_impact_buffer       PASSED
+tests/test_mesh.py::test_mesh_generation_and_subdivision         PASSED
+tests/test_mesh.py::test_graph_construction                       PASSED
+tests/test_physics_loss.py::test_physics_loss_computation        PASSED
+tests/test_zarr_and_sampler.py::test_zarr_writer_export          PASSED
+tests/test_zarr_and_sampler.py::test_probabilistic_ensemble_sampler PASSED
 
-========================== 9 passed in 26.40s ================================
+========================== 17 passed in 16.14s ================================
 ```
 
 ---

@@ -92,7 +92,7 @@ class ConditionalUNet(nn.Module):
             out_ch = base_channels * mult
             self.ups.append(nn.ModuleList([
                 nn.ConvTranspose2d(curr_ch, out_ch, kernel_size=4, stride=2, padding=1), # Upsample
-                ResidualBlock(curr_ch, out_ch, time_emb_dim),
+                ResidualBlock(out_ch * 2, out_ch, time_emb_dim),
                 ResidualBlock(out_ch, out_ch, time_emb_dim)
             ]))
             curr_ch = out_ch
