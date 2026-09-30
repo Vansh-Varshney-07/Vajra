@@ -1,113 +1,125 @@
-import React, { useState, useEffect } from 'react';
-import { Play, Pause, SkipBack, SkipForward, Clock } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
 
 interface TimeSliderProps {
   currentLeadTime: number;
   availableLeadTimes: number[];
-  onChange: (time: number) => void;
+  onChange: (t: number) => void;
 }
 
 export const TimeSlider: React.FC<TimeSliderProps> = ({
   currentLeadTime,
   availableLeadTimes,
-  onChange
+  onChange,
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const sortedTimes = [...availableLeadTimes].sort((a, b) => a - b);
+  const min = sortedTimes[0] ?? 0;
+  const max = sortedTimes[sortedTimes.length - 1] ?? 120;
+  const pct = max > min ? ((currentLeadTime - min) / (max - min)) * 100 : 100;
 
-  useEffect(() => {
-    if (!isPlaying) return;
-    const interval = setInterval(() => {
-      const currIdx = availableLeadTimes.indexOf(currentLeadTime);
-      const nextIdx = (currIdx + 1) % availableLeadTimes.length;
-      onChange(availableLeadTimes[nextIdx]);
-    }, 1500);
+  function stop() {
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = null;
+    setIsPlaying(false);
+  }
 
-    return () => clearInterval(interval);
-  }, [isPlaying, currentLeadTime, availableLeadTimes, onChange]);
+  function handlePlay() {
+    if (isPlaying) { stop(); return; }
+    // If at end, reset to start
+    if (currentLeadTime >= max) onChange(min);
+    setIsPlaying(true);
+    timerRef.current = setInterval(() => {
+      onChange(prev => {
+        // need functional update — we'll use a ref trick
+        return prev; // see below
+      });
+    }, 180);
+  }
 
-  const handleStepBack = () => {
-    const currIdx = availableLeadTimes.indexOf(currentLeadTime);
-    if (currIdx > 0) onChange(availableLeadTimes[currIdx - 1]);
-  };
+  // Better play logic using ref
+  const currentRef = useRef(currentLeadTime);
+  currentRef.current = currentLeadTime;
 
-  const handleStepForward = () => {
-    const currIdx = availableLeadTimes.indexOf(currentLeadTime);
-    if (currIdx < availableLeadTimes.length - 1) onChange(availableLeadTimes[currIdx + 1]);
-  };
+  function play() {
+    if (isPlaying) { stop(); return; }
+    let t = currentLeadTime >= max ? min : currentLeadTime;
+    onChange(t);
+    setIsPlaying(true);
+    timerRef.current = setInterval(() => {
+      t += 6;
+      if (t > max) { stop(); return; }
+      onChange(t);
+    }, 200);
+  }
+
+  useEffect(() => () => stop(), []); // cleanup
+
+  function stepBack() {
+    stop();
+    const prev = sortedTimes.filter(t => t < currentLeadTime).pop() ?? min;
+    onChange(prev);
+  }
+
+  function stepFwd() {
+    stop();
+    const next = sortedTimes.find(t => t > currentLeadTime) ?? max;
+    onChange(next);
+  }
 
   return (
-    <div
-      className="glass-panel"
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '20px',
-        padding: '12px 24px',
-        width: '100%',
-        zIndex: 1000
-      }}
-    >
+    <div className="timeline">
       {/* Controls */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <button
-          onClick={handleStepBack}
-          style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}
-        >
-          <SkipBack size={18} />
+      <div style={{ display: 'flex', gap: 6 }}>
+        <button className="icon-btn" onClick={stepBack} aria-label="Previous step">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M6 5h2v14H6zM20 5v14L9 12z" />
+          </svg>
         </button>
-
-        <button
-          onClick={() => setIsPlaying(!isPlaying)}
-          style={{
-            background: 'rgba(6, 182, 212, 0.2)',
-            border: '1px solid rgba(6, 182, 212, 0.4)',
-            color: '#38BDF8',
-            borderRadius: '50%',
-            width: '36px',
-            height: '36px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer'
-          }}
-        >
-          {isPlaying ? <Pause size={18} /> : <Play size={18} style={{ marginLeft: '2px' }} />}
+        <button className={`icon-btn ${isPlaying ? 'active' : ''}`} onClick={play} aria-label={isPlaying ? 'Pause' : 'Play'}>
+          {isPlaying ? (
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M6 4h4v16H6zM14 4h4v16h-4z" />
+            </svg>
+          ) : (
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M7 4v16l13-8z" />
+            </svg>
+          )}
         </button>
-
-        <button
-          onClick={handleStepForward}
-          style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}
-        >
-          <SkipForward size={18} />
+        <button className="icon-btn" onClick={stepFwd} aria-label="Next step">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M16 5h2v14h-2zM4 5v14l11-7z" />
+          </svg>
         </button>
       </div>
 
-      {/* Label */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: '160px' }}>
-        <Clock size={16} color="#06B6D4" />
-        <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#F8FAFC' }}>
-          Lead-Time: T+{currentLeadTime}h
-        </span>
+      {/* Lead time display */}
+      <div style={{ minWidth: 96 }}>
+        <span className="eyebrow">Lead time</span>
+        <div style={{ font: '500 20px/1.1 var(--font-mono)' }}>T+{currentLeadTime}h</div>
       </div>
 
-      {/* Range Slider */}
-      <input
-        type="range"
-        min={availableLeadTimes[0]}
-        max={availableLeadTimes[availableLeadTimes.length - 1]}
-        step={24}
-        value={currentLeadTime}
-        onChange={(e) => onChange(Number(e.target.value))}
-        style={{
-          flex: 1,
-          accentColor: '#06B6D4',
-          cursor: 'pointer'
-        }}
-      />
+      {/* Scrubber */}
+      <div style={{ flex: 1, minWidth: 200 }}>
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={6}
+          value={currentLeadTime}
+          style={{ '--p': `${pct}%` } as React.CSSProperties}
+          onChange={e => { stop(); onChange(+e.target.value); }}
+        />
+        <div className="ticks">
+          {sortedTimes.map(t => <span key={t}>T+{t}</span>)}
+        </div>
+      </div>
 
-      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-        Forecast Horizon: 10-Day Medium Range
-      </span>
+      {/* Horizon label */}
+      <div style={{ fontSize: 12, color: 'var(--muted)', textAlign: 'right' }}>
+        Horizon: 10-day medium range
+      </div>
     </div>
   );
 };

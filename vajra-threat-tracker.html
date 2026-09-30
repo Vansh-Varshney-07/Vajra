@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Vajra · Weather Threat Tracker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F2F1ED;--surface:#FFFFFF;--raised:#F7F6F2;--line:#DEDCD5;--text:#181B1D;--muted:#6A7277;
+  --alert:#D6352B;--alert-bg:#FCEBE9;--amber:#B86E00;--ok:#1E8A5C;--data:#1D6FB8;
+  --sea:#E4EBEF;--land:#D5D3CA;--grat:#C9D2D8;--coast:#9A988E;--mapink:#5B6469;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0D1012;--surface:#151A1D;--raised:#1A2024;--line:#262E33;--text:#E9EDEF;--muted:#8A959C;
+  --alert:#FF5E52;--alert-bg:#2A1615;--amber:#F0A63A;--ok:#4FC08D;--data:#6DB6F5;
+  --sea:#10171B;--land:#1B2126;--grat:#1C252B;--coast:#3A454C;--mapink:#7C888F;}}
+:root[data-theme="dark"]{
+  --bg:#0D1012;--surface:#151A1D;--raised:#1A2024;--line:#262E33;--text:#E9EDEF;--muted:#8A959C;
+  --alert:#FF5E52;--alert-bg:#2A1615;--amber:#F0A63A;--ok:#4FC08D;--data:#6DB6F5;
+  --sea:#10171B;--land:#1B2126;--grat:#1C252B;--coast:#3A454C;--mapink:#7C888F;}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{background:var(--bg);color:var(--text);font:400 14px/1.45 "IBM Plex Sans",system-ui,sans-serif;display:flex;flex-direction:column;min-height:100%}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+.eyebrow{font:500 11px/1 "IBM Plex Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* Top bar */
+header{display:flex;align-items:center;gap:24px;padding:12px 20px;background:var(--surface);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px}
+.mark{width:32px;height:32px;border-radius:8px;background:var(--text);color:var(--bg);display:grid;place-items:center;font:600 16px "IBM Plex Mono",monospace}
+.brand b{display:block;font-weight:600;letter-spacing:.14em;font-size:14px}
+.brand span{font-size:12px;color:var(--muted)}
+.pipeline{display:flex;align-items:center;gap:10px;margin:0 auto}
+.stage{display:flex;flex-direction:column;gap:3px;padding:6px 12px;border:1px solid var(--line);border-radius:8px;background:var(--raised)}
+.stage em{font-style:normal;font-size:12px;font-weight:500}
+.arrow{color:var(--muted)}
+.top-right{display:flex;align-items:center;gap:10px}
+.btn{font:500 12px "IBM Plex Sans",sans-serif;padding:7px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--text);cursor:pointer}
+.btn:hover{background:var(--raised)}
+.live{display:flex;align-items:center;gap:8px;font:500 11px "IBM Plex Mono",monospace;letter-spacing:.08em;color:var(--ok)}
+.dot{width:8px;height:8px;border-radius:50%;background:currentColor;box-shadow:0 0 0 0 currentColor;animation:ping 2s infinite}
+@keyframes ping{0%{box-shadow:0 0 0 0 color-mix(in srgb,currentColor 50%,transparent)}100%{box-shadow:0 0 0 8px transparent}}
+
+/* Layout */
+main{flex:1;display:grid;grid-template-columns:380px 1fr;gap:16px;padding:16px;min-height:0}
+aside{display:flex;flex-direction:column;gap:16px;min-width:0}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px}
+
+.head{padding:18px 18px 16px}
+.badge{display:inline-flex;align-items:center;gap:8px;font:600 11px "IBM Plex Mono",monospace;letter-spacing:.08em;color:#fff;background:var(--alert);padding:5px 9px;border-radius:6px}
+.badge i{width:6px;height:6px;border-radius:50%;background:#fff}
+.head h1{font:600 26px/1.15 "IBM Plex Mono",monospace;letter-spacing:-.01em;margin:14px 0 4px}
+.head p{color:var(--muted);font-size:13px}
+
+.metrics{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--line)}
+.m{padding:14px 18px;border-bottom:1px solid var(--line)}
+.m:nth-child(odd){border-right:1px solid var(--line)}
+.m:nth-last-child(-n+2){border-bottom:0}
+.m .eyebrow{margin-bottom:8px}
+.m .v{font:500 28px/1 "IBM Plex Mono",monospace;letter-spacing:-.02em}
+.m .v small{font-size:12px;color:var(--muted);font-weight:400;margin-left:4px;letter-spacing:0}
+.m .v.sm{font-size:17px;line-height:28px}
+.bar{height:4px;background:var(--line);border-radius:2px;margin-top:10px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--alert);border-radius:2px;transition:width .3s}
+
+.advisory{padding:16px 18px;background:var(--alert-bg);border-color:color-mix(in srgb,var(--alert) 35%,var(--line));position:relative}
+.advisory::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:3px;background:var(--alert);border-radius:0 3px 3px 0}
+.advisory h2{font:600 12px "IBM Plex Mono",monospace;letter-spacing:.08em;color:var(--alert);margin-bottom:8px}
+.advisory p{font-size:14px}
+.advisory .meta{margin-top:10px;padding-top:10px;border-top:1px dashed color-mix(in srgb,var(--alert) 30%,transparent);font-size:12px;color:var(--muted)}
+.advisory .meta b{color:var(--text);font-weight:600}
+
+.cta{width:100%;padding:14px;border:0;border-radius:10px;background:var(--text);color:var(--bg);font:600 13px "IBM Plex Sans",sans-serif;letter-spacing:.04em;cursor:pointer;display:flex;justify-content:center;align-items:center;gap:10px;transition:opacity .2s}
+.cta:hover{opacity:.88}
+.cta[disabled]{opacity:.6;cursor:progress}
+.cta.done{background:var(--ok);color:#fff}
+
+.diag{padding:16px 18px;margin-top:auto}
+.diag .eyebrow{margin-bottom:12px}
+.row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:8px 0;border-top:1px solid var(--line);font-size:13px}
+.row:first-of-type{border-top:0}
+.row span:first-child{color:var(--muted)}
+.row b{font:500 13px "IBM Plex Mono",monospace}
+.row em{font-style:normal;color:var(--muted);font-size:11px;margin-left:6px}
+.ok{color:var(--ok)}
+
+/* Map */
+.mapwrap{position:relative;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:var(--sea);min-height:520px;display:flex;flex-direction:column}
+.stageMap{position:relative;flex:1;min-height:0}
+svg#map{position:absolute;inset:0;width:100%;height:100%}
+.chip{position:absolute;top:14px;left:14px;display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surface);border:1px solid var(--line);border-radius:8px;font:500 11px "IBM Plex Mono",monospace;letter-spacing:.06em}
+.layers{position:absolute;top:14px;right:14px;width:232px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.layers .eyebrow{margin-bottom:8px}
+.layers label{display:flex;align-items:center;gap:10px;padding:5px 0;font-size:13px;cursor:pointer}
+.layers input{appearance:none;width:14px;height:14px;border:1.5px solid var(--muted);border-radius:4px;display:grid;place-content:center;cursor:pointer}
+.layers input:checked{background:var(--text);border-color:var(--text)}
+.layers input:checked::after{content:"";width:6px;height:3px;border:solid var(--bg);border-width:0 0 1.5px 1.5px;transform:rotate(-45deg) translate(1px,-1px)}
+.sw{width:14px;height:3px;border-radius:2px;margin-left:auto}
+.legend{position:absolute;left:14px;bottom:14px;padding:8px 12px;background:var(--surface);border:1px solid var(--line);border-radius:8px;font-size:11px;color:var(--muted)}
+
+/* Timeline */
+.timeline{display:flex;align-items:center;gap:16px;padding:12px 16px;background:var(--surface);border-top:1px solid var(--line);flex-wrap:wrap}
+.ctrls{display:flex;gap:6px}
+.ib{width:34px;height:34px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--text);display:grid;place-items:center;cursor:pointer}
+.ib:hover{background:var(--raised)}
+.ib.play{background:var(--text);color:var(--bg);border-color:var(--text)}
+.lead{min-width:96px}
+.lead b{display:block;font:500 20px/1.1 "IBM Plex Mono",monospace}
+.scrub{flex:1;min-width:220px}
+input[type=range]{width:100%;appearance:none;height:4px;border-radius:2px;background:linear-gradient(to right,var(--text) var(--p,100%),var(--line) var(--p,100%));outline:0;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{appearance:none;width:16px;height:16px;border-radius:50%;background:var(--surface);border:2px solid var(--text)}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--surface);border:2px solid var(--text)}
+.ticks{display:flex;justify-content:space-between;margin-top:8px;font:400 10px "IBM Plex Mono",monospace;color:var(--muted)}
+.horizon{font-size:12px;color:var(--muted);text-align:right}
+
+/* Map svg */
+.spin{transform-box:fill-box;transform-origin:center;animation:spin 14s linear infinite}
+@keyframes spin{to{transform:rotate(-360deg)}}
+.pulse{transform-box:fill-box;transform-origin:center;animation:pl 2.4s ease-out infinite}
+@keyframes pl{0%{transform:scale(.6);opacity:.8}100%{transform:scale(1.8);opacity:0}}
+.hide{display:none}
+@media (prefers-reduced-motion:reduce){.spin,.pulse,.dot{animation:none}}
+@media (max-width:980px){
+  main{grid-template-columns:1fr}
+  .pipeline{order:3;margin:0;width:100%;overflow-x:auto}
+  .layers{position:static;width:auto;margin:60px 14px 0}
+  .mapwrap{min-height:0}.stageMap{min-height:440px}
+  .horizon{display:none}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><div class="mark">V</div><div><b>VAJRA</b><span>Weather Threat Tracker · MoES · NCMRWF</span></div></div>
+  <div class="pipeline" aria-label="Model pipeline">
+    <div class="stage"><span class="eyebrow">Stage 1 · GNN</span><em class="mono">ICOSA-MESH L5</em></div>
+    <span class="arrow">→</span>
+    <div class="stage"><span class="eyebrow">Stage 2 · Diffusion</span><em class="mono">12 km → 5 km</em></div>
+  </div>
+  <div class="top-right"><button class="btn">Thresholds</button><div class="live"><span class="dot"></span>LIVE INFERENCE</div></div>
+</header>
+
+<main>
+<aside>
+  <section class="panel head">
+    <span class="badge"><i></i>RED ALERT</span>
+    <h1>BOB-CYC-2026-001</h1>
+    <p>T+72h forecast window · Bay of Bengal</p>
+  </section>
+
+  <section class="panel" style="overflow:hidden">
+    <div class="metrics">
+      <div class="m"><div class="eyebrow">Peak wind</div><div class="v"><span id="wind">145</span><small>km/h</small></div></div>
+      <div class="m"><div class="eyebrow">12 h rainfall</div><div class="v"><span id="rain">195</span><small>mm</small></div></div>
+      <div class="m"><div class="eyebrow">Threat probability</div><div class="v" style="color:var(--alert)"><span id="prob">88</span><small>%</small></div><div class="bar"><i id="probbar" style="width:88%"></i></div></div>
+      <div class="m"><div class="eyebrow">Centroid</div><div class="v sm" id="cent">19.82°N 86.85°E</div></div>
+    </div>
+  </section>
+
+  <section class="panel advisory">
+    <h2>NDRF · TARGETED EVACUATION</h2>
+    <p>Immediate evacuation of the 5 km coastal zone. Severe storm surge expected.</p>
+    <div class="meta">Impact radius: exactly <b>5.0 km</b> geodesic buffer around storm eye.</div>
+  </section>
+
+  <button class="cta" id="gen"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg><span>Generate 5 km impact field</span></button>
+
+  <section class="panel diag">
+    <div class="eyebrow">Physics &amp; verification</div>
+    <div class="row"><span>Peak amplitude retention</span><b class="ok">2.4%<em>zero smoothing</em></b></div>
+    <div class="row"><span>Extremal skill (SEDI)</span><b>0.89 / 1.00</b></div>
+    <div class="row"><span>Continuity mass divergence</span><b class="ok">0.018 s⁻¹<em>conserved</em></b></div>
+  </section>
+</aside>
+
+<section class="mapwrap">
+  <div class="stageMap">
+    <svg id="map" viewBox="0 0 800 636" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Forecast tracks over the Bay of Bengal"></svg>
+    <div class="chip"><span class="dot" style="color:var(--ok)"></span>BAY OF BENGAL · 12 KM EPS MESH</div>
+    <div class="layers">
+      <div class="eyebrow">Visual layers</div>
+      <label><input type="checkbox" data-l="ens" checked>50-member ensemble<i class="sw" style="background:var(--data);opacity:.5"></i></label>
+      <label><input type="checkbox" data-l="env">90% uncertainty envelope<i class="sw" style="background:var(--data);opacity:.25;height:8px"></i></label>
+      <label><input type="checkbox" data-l="ring" checked>5 km threat ring<i class="sw" style="background:var(--alert)"></i></label>
+      <label><input type="checkbox" data-l="imp" checked>5 km downscaled field<i class="sw" style="background:var(--amber)"></i></label>
+      <label><input type="checkbox" data-l="wind" checked>Wind streamlines<i class="sw" style="background:var(--muted)"></i></label>
+    </div>
+    <div class="legend">Schematic scale · 5 km features enlarged for legibility</div>
+  </div>
+  <div class="timeline">
+    <div class="ctrls">
+      <button class="ib" id="prev" aria-label="Previous step"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></button>
+      <button class="ib play" id="play" aria-label="Play"><svg id="pi" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8z"/></svg></button>
+      <button class="ib" id="next" aria-label="Next step"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg></button>
+    </div>
+    <div class="lead"><span class="eyebrow">Lead time</span><b id="lead">T+72h</b></div>
+    <div class="scrub"><input type="range" id="rng" min="0" max="72" step="6" value="72"><div class="ticks"><span>T+0</span><span>T+24</span><span>T+48</span><span>T+72</span></div></div>
+    <div class="horizon">Horizon: 10-day medium range</div>
+  </div>
+</section>
+</main>
+
+<script>
+const NS="http://www.w3.org/2000/svg",$=s=>document.querySelector(s);
+const P=(lo,la)=>[(lo-79)*60,(22.6-la)*60];
+const KF=[[0,88.2,13.2],[24,87.6,15.4],[48,87.1,17.6],[72,86.85,19.82]];
+const WIND=[85,105,125,145],RAIN=[40,90,150,195],PROB=[42,61,77,88];
+const interp=(t,a)=>{const i=Math.min(Math.floor(t/24),2),f=(t-i*24)/24;return a[i]+(a[i+1]-a[i])*f};
+const pos=t=>{const i=Math.min(Math.floor(t/24),2),f=(t-i*24)/24;return[KF[i][1]+(KF[i+1][1]-KF[i][1])*f,KF[i][2]+(KF[i+1][2]-KF[i][2])*f]};
+let s=7;const rnd=()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+const coast=[[79.75,12],[80.3,13.1],[80.2,14.4],[80.1,15.8],[80.9,15.8],[82.3,16.9],[83.3,17.7],[84,18.3],[84.9,19.3],[85.8,19.8],[86.7,20.3],[86.9,20.8],[87,21.5],[87.5,21.6],[88.3,21.7],[89,21.8],[90,22],[90.8,22.4],[91.6,22.2],[92.3,21]];
+const pts=a=>a.map(p=>P(p[0],p[1]).join(",")).join(" ");
+const steps=[...Array(13).keys()].map(i=>i*6);
+const at=(t)=>pos(t);
+let h="";
+// graticule
+for(let lo=80;lo<=92;lo+=2){const x=(lo-79)*60;h+=`<line x1="${x}" y1="0" x2="${x}" y2="636" stroke="var(--grat)"/><text x="${x+4}" y="626" fill="var(--mapink)" font-size="10" font-family="IBM Plex Mono">${lo}°E</text>`}
+for(let la=12;la<=22;la+=2){const y=(22.6-la)*60;h+=`<line x1="0" y1="${y}" x2="800" y2="${y}" stroke="var(--grat)"/><text x="6" y="${y-4}" fill="var(--mapink)" font-size="10" font-family="IBM Plex Mono">${la}°N</text>`}
+h+=`<polygon points="${pts([[79,22.8],[79,12],...coast,[92.3,22.8]])}" fill="var(--land)" stroke="var(--coast)" stroke-width="1.2"/>`;
+h+=`<text x="470" y="470" fill="var(--mapink)" font-size="11" letter-spacing="3" font-family="IBM Plex Mono" opacity=".6">BAY OF BENGAL</text>`;
+// envelope
+const L=[],R=[];steps.forEach(t=>{const[lo,la]=at(t),w=0.08+1.05*t/72;L.push([lo-w,la]);R.unshift([lo+w,la])});
+h+=`<polygon data-g="env" class="hide" points="${pts([...L,...R])}" fill="var(--data)" opacity=".13" stroke="var(--data)" stroke-opacity=".4" stroke-dasharray="3 3"/>`;
+// ensemble
+let ens="";for(let m=0;m<50;m++){const a=(rnd()+rnd()+rnd()-1.5)*1.3,b=(rnd()-.5)*.5;ens+=`<polyline points="${pts(steps.map(t=>{const[lo,la]=at(t),f=t/72;return[lo+a*f,la+b*f]}))}" fill="none" stroke="var(--data)" stroke-opacity=".3" stroke-width="1"/>`}
+h+=`<g data-g="ens">${ens}</g>`;
+// mean track
+h+=`<polyline points="${pts(steps.map(at))}" fill="none" stroke="var(--data)" stroke-width="1.5" stroke-dasharray="4 5" opacity=".7"/>`;
+h+=`<polyline id="done" fill="none" stroke="var(--data)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`;
+[0,24,48,72].forEach(t=>{const[x,y]=P(...at(t));h+=`<circle cx="${x}" cy="${y}" r="3.5" fill="var(--surface)" stroke="var(--data)" stroke-width="2"/><text x="${x+10}" y="${y+4}" fill="var(--mapink)" font-size="10" font-family="IBM Plex Mono">T+${t}</text>`});
+// impact field near Paradip
+const[ix,iy]=P(86.6,20.3);
+h+=`<g data-g="imp" class="hide"><defs><radialGradient id="ig"><stop offset="0" stop-color="var(--amber)" stop-opacity=".55"/><stop offset="1" stop-color="var(--amber)" stop-opacity="0"/></radialGradient></defs><ellipse cx="${ix}" cy="${iy}" rx="46" ry="30" fill="url(#ig)"/><circle cx="${ix}" cy="${iy}" r="3" fill="var(--amber)"/><text x="${ix+12}" y="${iy-14}" fill="var(--amber)" font-size="10" font-weight="600" font-family="IBM Plex Mono">COASTAL IMPACT FIELD</text></g>`;
+// eye
+h+=`<g id="eye"><g data-g="wind"><g class="spin"><path d="M0-56A56 56 0 0 1 56 0M0 56A56 56 0 0 1-56 0" fill="none" stroke="var(--mapink)" stroke-width="1.2" opacity=".6"/><path d="M0-38A38 38 0 0 1 38 0M0 38A38 38 0 0 1-38 0" fill="none" stroke="var(--mapink)" stroke-width="1.2" opacity=".8"/><path d="M0-76A76 76 0 0 1 76 0M0 76A76 76 0 0 1-76 0" fill="none" stroke="var(--mapink)" stroke-width="1" opacity=".4"/></g></g><g data-g="ring"><circle class="pulse" r="18" fill="none" stroke="var(--alert)" stroke-width="1.5"/><circle r="18" fill="var(--alert)" fill-opacity=".12" stroke="var(--alert)" stroke-width="1.5" stroke-dasharray="3 3"/></g><circle r="6" fill="var(--alert)" stroke="var(--surface)" stroke-width="2"/></g>`;
+$("#map").innerHTML=h;
+const G=n=>document.querySelectorAll(`[data-g="${n}"]`);
+document.querySelectorAll(".layers input").forEach(i=>i.onchange=()=>G(i.dataset.l).forEach(e=>e.classList.toggle("hide",!i.checked)));
+// impact starts hidden until generated
+$("input[data-l=imp]").checked=false;
+G("env").forEach(e=>e.classList.add("hide"));
+
+const rng=$("#rng");
+function render(t){
+  const[lo,la]=pos(t),[x,y]=P(lo,la);
+  $("#eye").setAttribute("transform",`translate(${x} ${y})`);
+  $("#done").setAttribute("points",pts(steps.filter(k=>k<=t).concat(t%6?[t]:[]).map(at)));
+  $("#wind").textContent=Math.round(interp(t,WIND));$("#rain").textContent=Math.round(interp(t,RAIN));
+  const p=Math.round(interp(t,PROB));$("#prob").textContent=p;$("#probbar").style.width=p+"%";
+  $("#cent").textContent=`${la.toFixed(2)}°N ${lo.toFixed(2)}°E`;
+  $("#lead").textContent="T+"+t+"h";rng.value=t;rng.style.setProperty("--p",(t/72*100)+"%");
+}
+rng.oninput=()=>{stop();render(+rng.value)};
+$("#prev").onclick=()=>{stop();render(Math.max(0,+rng.value-6))};
+$("#next").onclick=()=>{stop();render(Math.min(72,+rng.value+6))};
+let timer=null;const PLAY='<path d="M7 4v16l13-8z"/>',PAUSE='<path d="M6 4h4v16H6zM14 4h4v16h-4z"/>';
+function stop(){clearInterval(timer);timer=null;$("#pi").innerHTML=PLAY}
+$("#play").onclick=()=>{if(timer)return stop();if(+rng.value>=72)render(0);$("#pi").innerHTML=PAUSE;
+  timer=setInterval(()=>{const n=+rng.value+1;if(n>72)return stop();render(n)},140)};
+$("#gen").onclick=function(){const b=this;b.disabled=true;b.querySelector("span").textContent="Running diffusion 12 km → 5 km…";
+  setTimeout(()=>{b.disabled=false;b.classList.add("done");b.querySelector("span").textContent="5 km impact field ready";
+    const c=$("input[data-l=imp]");c.checked=true;c.onchange();c.dispatchEvent(new Event("change"))},1400)};
+render(72);
+</script>
+</body>
+</html>
