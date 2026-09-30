@@ -1,0 +1,21 @@
+# Spherical GNN Configuration for 4D Weather Anomaly Tracking
+mesh:
+  level: 5                  # Icosahedral subdivision level (level 5 ≈ 50km node spacing, 10,242 nodes)
+  radius_km: 6371.0         # Earth radius in kilometers
+  coordinate_system: "cartesian_unit_sphere"
+
+model:
+  in_channels: 8            # [u10, v10, t2m, q850, mslp, tp, z500, efi]
+  hidden_dim: 128
+  num_heads: 4
+  edge_dim: 3               # 3D relative vector displacement between neighboring nodes
+  num_gat_layers: 2
+  temporal_model: "gru"     # Recurrent sequence tracking over lead times
+  dropout: 0.1
+
+tracking:
+  lead_time_steps: 40       # E.g. 6-hourly steps over 10 days (240 hours)
+  efi_threshold: 0.75       # Extreme Forecast Index threshold for anomaly candidate
+  z_score_threshold: 3.0    # Climatological standard deviations
+  min_cluster_nodes: 5      # Minimum connected mesh nodes to constitute a tracked event
+  max_tracking_distance_km: 400.0  # Max distance an anomaly centroid can jump in a 6h interval

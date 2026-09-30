@@ -1,0 +1,33 @@
+# Configurable Meteorological Risk & Early Warning Thresholds
+cyclone:
+  wind_kmh:
+    low: [63.0, 88.0]             # Deep Depression to Cyclonic Storm
+    moderate: [89.0, 117.0]       # Severe Cyclonic Storm
+    severe: [118.0, 166.0]        # Very Severe Cyclonic Storm
+    catastrophic: [167.0, 9999.0] # Extremely Severe / Super Cyclone
+  rainfall_mm_12hr:
+    low: [64.5, 115.5]            # Heavy Rain
+    moderate: [115.6, 204.4]      # Very Heavy Rain
+    severe: [204.5, 9999.0]       # Extremely Heavy Rain
+
+heatwave:
+  t2m_celsius:
+    watch: [40.0, 44.0]
+    warning: [44.1, 46.9]
+    emergency: [47.0, 9999.0]
+  anomaly_celsius:
+    departure_normal: 4.5
+    severe_departure: 6.5
+
+coldwave:
+  t2m_celsius:
+    watch: [10.0, 7.0]
+    warning: [6.9, 4.0]
+    emergency: [3.9, -50.0]
+
+default_impact_radius_km: 5.0
+warning_levels:
+  - "GREEN"   # Normal / No Warning
+  - "YELLOW"  # Watch (Be updated)
+  - "ORANGE"  # Alert (Be prepared)
+  - "RED"     # Warning (Take action immediately)

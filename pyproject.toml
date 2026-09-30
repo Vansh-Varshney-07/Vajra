@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vajra"
+version = "0.1.0"
+description = "AI-Driven Spatio-Temporal Tracking & Physics-Informed Downscaling of Extreme Weather Anomalies"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+    { name = "Vajra AI Team", email = "vajra-weather@ncmrwf.gov.in" }
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Atmospheric Science",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["vajra*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

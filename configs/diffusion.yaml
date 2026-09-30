@@ -1,0 +1,24 @@
+# Physics-Informed Conditional Generative Diffusion (12km -> 5km Downscaling)
+model:
+  name: "ConditionalUNet2D"
+  in_channels: 8            # Noisy state channels to predict (e.g. u, v, t2m, q, mslp, tp, etc.)
+  out_channels: 8           # High-resolution 5km atmospheric fields
+  condition_channels: 12    # Coarse 12km fields (8) + Static DEM, Slope, Aspect, Land-Sea Mask (4)
+  block_out_channels: [64, 128, 256, 512]
+  layers_per_block: 2
+  attention_head_dim: 8
+  norm_num_groups: 32
+
+diffusion:
+  num_train_timesteps: 1000
+  beta_schedule: "squaredcos_cap_v2"
+  num_inference_steps: 50
+  guidance_scale: 3.5       # Classifier-free guidance multiplier for conditional fidelity
+  num_ensemble_samples: 20  # Generate 20 independent plausible futures to preserve tail risk
+
+physics_loss:
+  lambda_divergence: 0.15   # Penalizes horizontal wind divergence (mass continuity)
+  lambda_moisture: 0.20     # Penalizes precipitation without physical moisture convergence
+  lambda_extreme: 5.0       # Higher weight applied to values exceeding 95th percentile
+  extreme_quantile: 0.95
+  grid_spacing_meters: 5000.0 # 5 km resolution
