@@ -1,0 +1,45 @@
+# Python virtual environment
+.venv/
+env/
+venv/
+ENV/
+
+# Python cache & artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Large Weather Datasets & Zarr stores
+data/raw/
+data/processed/
+data/terrain/
+*.grib
+*.grib2
+*.nc
+*.nc4
+*.zarr/
+*.tif
+*.tiff
+
+# Model Checkpoints & Weights
+checkpoints/
+weights/
+*.pt
+*.pth
+*.onnx
+wandb/
+
+# Distribution / Packaging
+dist/
+build/
+*.egg-info/
+
+# Environment & IDE
+.env
+.env.local
+.vscode/
+.idea/
