@@ -29,6 +29,7 @@ from .schemas import (
 )
 from ..impact.impact_zone import ImpactZoneGenerator
 from ..impact.risk_engine import RiskEngine
+from ..utils.carto_client import CartoClient
 from .geo import points_to_geojson_linestring
 
 # ─── App Setup ────────────────────────────────────────────────────────────────
@@ -127,6 +128,9 @@ EVENTS_DATABASE: Dict[str, Dict[str, Any]] = {
 }
 
 
+carto_client = CartoClient()
+
+
 # ─── Health ────────────────────────────────────────────────────────────────────
 @app.get("/", tags=["Health"])
 async def root():
@@ -137,7 +141,14 @@ async def root():
         "institution": "MoES / NCMRWF",
         "active_events": len(EVENTS_DATABASE),
         "pipeline_stages": ["Spherical-GNN-Tracker", "EFI-Anomaly", "Diffusion-Downscaler-5km", "Impact-Buffers"],
+        "carto_integration": carto_client.is_configured,
     }
+
+
+@app.get("/carto/status", tags=["Health"])
+async def get_carto_status():
+    """Verify CARTO platform and MCP integration status."""
+    return carto_client.verify_connection()
 
 
 # ─── Events ───────────────────────────────────────────────────────────────────

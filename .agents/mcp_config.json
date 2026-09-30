@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "carto": {
+      "serverUrl": "https://gcp-asia-northeast1.api.carto.com/mcp/ac_yl5r440d",
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhIjoiYWNfeWw1cjQ0MGQiLCJqdGkiOiJjNWYxYTFmMGQ1YzRiODM5MGVjMTQwYzc4MWMxNzI1MCJ9.sW2QNSgTD8hNMTOibj3sEhH1W9AZhDtkh09AYSv9Xyw"
+      }
+    }
+  }
+}

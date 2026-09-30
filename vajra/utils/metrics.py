@@ -53,3 +53,25 @@ def symmetric_extremal_dependence_index(
 
     sedi = num / den
     return float(np.clip(sedi, -1.0, 1.0))
+
+# ─── Aliases for Vajra utils package ──────────────────────────────────────────
+def compute_crps(ensemble_predictions: np.ndarray, observation: float) -> float:
+    """Continuous Ranked Probability Score (CRPS) for ensemble evaluation."""
+    ensemble = np.sort(ensemble_predictions)
+    n = len(ensemble)
+    mae = np.mean(np.abs(ensemble - observation))
+    diff_sum = np.sum([np.abs(e1 - e2) for e1 in ensemble for e2 in ensemble])
+    return float(mae - (diff_sum / (2.0 * n * n)))
+
+def compute_sedi(hits: int, false_alarms: int, misses: int, correct_negatives: int) -> float:
+    return symmetric_extremal_dependence_index(hits, false_alarms, misses, correct_negatives)
+
+def compute_ets(hits: int, false_alarms: int, misses: int, correct_negatives: int) -> float:
+    """Equitable Threat Score (ETS)."""
+    n = hits + false_alarms + misses + correct_negatives
+    hits_random = ((hits + misses) * (hits + false_alarms)) / n if n > 0 else 0
+    den = (hits + false_alarms + misses - hits_random)
+    return float((hits - hits_random) / den) if den > 0 else 0.0
+
+def compute_peak_amplitude_retention(pred: np.ndarray, target: np.ndarray, quantile: float = 0.99) -> float:
+    return 100.0 - peak_amplitude_retention_error(pred, target, quantile)

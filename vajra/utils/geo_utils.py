@@ -88,3 +88,16 @@ def to_feature_collection(features: List[Dict[str, Any]]) -> Dict[str, Any]:
         "type": "FeatureCollection",
         "features": features
     }
+
+# ─── Aliases for Vajra utils package ──────────────────────────────────────────
+def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    return great_circle_distance_km(lat1, lon1, lat2, lon2)
+
+def geodesic_buffer_polygon(lat: float, lon: float, radius_m: float = 5000.0) -> Polygon:
+    return create_geodesic_buffer(lat, lon, radius_m)
+
+def bbox_from_centroid(lat: float, lon: float, radius_km: float = 50.0) -> Tuple[float, float, float, float]:
+    dlat = radius_km / 111.0
+    dlon = radius_km / (111.0 * math.cos(math.radians(lat)))
+    return (lon - dlon, lat - dlat, lon + dlon, lat + dlat)
+

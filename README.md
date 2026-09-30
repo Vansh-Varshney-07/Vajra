@@ -14,6 +14,25 @@ Vajra is an end-to-end AI pipeline that:
 
 ---
 
+## Dashboard & System Screenshots
+
+### 1. Super Cyclone Tracking & 5 km Impact Buffer (Bay of Bengal)
+![Super Cyclone Bay of Bengal](screenshots/dashboard_cyclone.png)
+
+### 2. North-West India Heat Dome Anomaly (Rajasthan & Punjab)
+![Heat Dome NW India](screenshots/dashboard_heatwave.png)
+
+### 3. Kerala Flash Flood & Extreme Rainfall Risk (Western Ghats)
+![Kerala Flash Flood Risk](screenshots/dashboard_rainfall.png)
+
+### 4. Physics-Constrained Diffusion Downscaling (12 km → 5 km Resolution)
+![Diffusion Downscaling Modal](screenshots/downscaling_modal.png)
+
+### 5. Risk Engine & Advisory Threshold Configuration
+![Risk Engine Thresholds](screenshots/thresholds_config.png)
+
+---
+
 ## Quick Start
 
 ### 1. Python Backend (FastAPI)

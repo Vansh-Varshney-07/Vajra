@@ -103,6 +103,7 @@ export const App: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [showThresholds, setShowThresholds] = useState<boolean>(false);
   const [apiConnected, setApiConnected] = useState<boolean>(false);
+  const [cartoStatus, setCartoStatus] = useState<{ connected: boolean; message: string }>({ connected: true, message: 'CARTO Connected' });
 
   const [layers, setLayers] = useState({
     showEnsembleTracks: true,
@@ -110,6 +111,7 @@ export const App: React.FC = () => {
     showImpactZone: true,
     show5kmHeatmap: true,
     showWindStreamlines: true,
+    showCartoCoastal: true,
   });
 
   const event = events[selectedId];
@@ -227,7 +229,7 @@ export const App: React.FC = () => {
           </div>
         </div>
 
-        {/* Right: live + thresholds */}
+        {/* Right: live + CARTO + thresholds */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
           <button
             onClick={() => setShowThresholds(v => !v)}
@@ -237,6 +239,10 @@ export const App: React.FC = () => {
           >
             ⚙ Thresholds
           </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, font: '500 11px var(--font-mono)', letterSpacing: '.08em', color: cartoStatus.connected ? 'var(--ok)' : 'var(--amber)' }} title={cartoStatus.message}>
+            <div className="live-dot" style={{ background: cartoStatus.connected ? 'var(--ok)' : 'var(--amber)' }} />
+            {cartoStatus.connected ? 'CARTO GIS' : 'CARTO DISCONNECTED'}
+          </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, font: '500 11px var(--font-mono)', letterSpacing: '.08em', color: 'var(--ok)' }}>
             <div className="live-dot" />
             {apiConnected ? 'LIVE INFERENCE' : 'OFFLINE MODE'}
@@ -293,6 +299,7 @@ export const App: React.FC = () => {
               trajectoryData={trajectoryData}
               impactGeojson={impactGeojson}
               event={event}
+              onCartoStatusChange={setCartoStatus}
             />
 
             {/* Layer controls */}
@@ -304,6 +311,7 @@ export const App: React.FC = () => {
                 ['showImpactZone',       '5 km threat ring',        'var(--alert)',1 ],
                 ['show5kmHeatmap',       '5 km downscaled field',   'var(--amber)',1 ],
                 ['showWindStreamlines',  'Wind streamlines',        'var(--muted)',1 ],
+                ['showCartoCoastal',     'CARTO GeoJSON boundaries','var(--ok)',   1 ],
               ] as const).map(([key, label, color, op]) => (
                 <label key={key} className="layer-label">
                   <input

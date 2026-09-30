@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import { WindLayer } from './WindLayer';
 import { RainfallGrid } from './RainfallGrid';
+import { useCartoLayer } from './CartoLayer';
 
 interface MapViewProps {
   currentLeadTime: number;
@@ -11,6 +12,7 @@ interface MapViewProps {
     showImpactZone: boolean;
     show5kmHeatmap: boolean;
     showWindStreamlines?: boolean;
+    showCartoCoastal?: boolean;
   };
   trajectoryData: {
     waypoints: Array<{ lead_time_hr: number; lat: number; lon: number; intensity: number }>;
@@ -18,6 +20,7 @@ interface MapViewProps {
   };
   impactGeojson: any;
   event?: any;
+  onCartoStatusChange?: (status: { connected: boolean; message: string }) => void;
 }
 
 // Centre of map based on event type
@@ -33,10 +36,19 @@ export const MapView: React.FC<MapViewProps> = ({
   trajectoryData,
   impactGeojson,
   event,
+  onCartoStatusChange,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef  = useRef<L.Map | null>(null);
   const layerGroupRef   = useRef<L.LayerGroup | null>(null);
+
+  // ── CARTO GIS boundary overlay hook ─────────────────────────────────────
+  useCartoLayer({
+    map: mapInstanceRef.current,
+    visible: layers.showCartoCoastal ?? true,
+    layerType: 'coastal',
+    onStatusChange: onCartoStatusChange,
+  });
 
   // ── Initialize map ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -50,10 +62,14 @@ export const MapView: React.FC<MapViewProps> = ({
       attributionControl: false,
     });
 
-    // Dark CartoDB basemap
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      maxZoom: 19,
-      subdomains: 'abcd',
+    // Clean high-contrast dark canvas basemap (No watermark, 100% free)
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 16,
+    }).addTo(map);
+
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 16,
+      opacity: 0.65,
     }).addTo(map);
 
     L.control.zoom({ position: 'bottomright' }).addTo(map);
